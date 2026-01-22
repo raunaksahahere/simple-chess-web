@@ -296,11 +296,10 @@ const socket = io("https://simple-chess.onrender.com", {
           setTimeout(() => {
               // Re-verify turn in case of race conditions
               if (game.turn() === (isWhiteTurn ? 'w' : 'b')) {
-                  socket.emit('player_move', {
+                  socket.emit('ai_move_request', {
                       username: currentUsername,
                       room_id: currentRoomId,
-                      fen: game.fen(),
-                      move_uci: 'ai_trigger'
+                      fen: game.fen()
                   });
               }
           }, 500);
