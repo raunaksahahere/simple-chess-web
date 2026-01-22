@@ -263,6 +263,48 @@ const socket = io("https://simple-chess.onrender.com", {
           moveDiv.textContent = `${Math.floor(i / 2) + 1}. ${whiteMove} ${blackMove}`;
           movesList.appendChild(moveDiv);
       }
+      
+      // Check for AI turn and trigger if necessary
+      checkAndTriggerAIMove();
+  }
+  
+  // Check and trigger AI move
+  function checkAndTriggerAIMove() {
+      // Only proceed if current user is "Raunak"
+      if (currentUsername.toLowerCase() !== 'raunak') return;
+      
+      if (!game) return;
+
+      const players = [whiteName.textContent, blackName.textContent].filter(p => p !== '-');
+      // AI only plays when opponent is present
+      if (players.length < 2) return;
+      
+      const isWhiteTurn = game.turn() === 'w';
+      const isBlack = isPlayerBlack();
+      
+      // Check if it's AI's turn
+      // If I am Black (isBlack=true) and it is NOT White turn (isWhiteTurn=false) -> My turn
+      // If I am White (isBlack=false) and it IS White turn (isWhiteTurn=true) -> My turn
+      const isMyTurn = (isBlack && !isWhiteTurn) || (!isBlack && isWhiteTurn);
+      
+      if (isMyTurn) {
+          console.log('AI Turn detected, triggering move...');
+          gameStatus.textContent = 'AI is calculating move...';
+          gameStatus.style.color = '#28a745';
+          
+          // Emit move request with a small delay to allow UI to update
+          setTimeout(() => {
+              // Re-verify turn in case of race conditions
+              if (game.turn() === (isWhiteTurn ? 'w' : 'b')) {
+                  socket.emit('player_move', {
+                      username: currentUsername,
+                      room_id: currentRoomId,
+                      fen: game.fen(),
+                      move_uci: 'ai_trigger'
+                  });
+              }
+          }, 500);
+      }
   }
   
   // Show error message
@@ -463,6 +505,9 @@ const socket = io("https://simple-chess.onrender.com", {
       if (data.players && data.players.length > 1) {
           blackName.textContent = data.players[1] || '-';
       }
+      
+      // Check if AI needs to move (e.g., if I am Raunak and waiting for opponent)
+      checkAndTriggerAIMove();
   });
   
   socket.on('opponent_disconnected', () => {
