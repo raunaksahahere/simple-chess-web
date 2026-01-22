@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Chess Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♟️ Multiplayer Chess</h1>
+        </header>
+
+        <div id="lobby" class="panel">
+            <h2>Join Game</h2>
+            <div class="form-group">
+                <label for="username">Your Username:</label>
+                <input type="text" id="username" placeholder="Enter username" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label for="roomId">Room ID:</label>
+                <div class="room-input-group">
+                    <input type="text" id="roomId" placeholder="Enter room ID (e.g., room1)" value="default">
+                    <button id="randomRoomBtn" class="btn btn-secondary" title="Join a random available room">🎲 Random</button>
+                </div>
+            </div>
+            <button id="joinBtn" class="btn btn-primary">Join Room</button>
+            <div id="lobbyStatus" class="status"></div>
+        </div>
+
+        <div id="loading" class="panel hidden">
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <h2>Joining Room...</h2>
+                <p id="loadingText">Connecting to game server</p>
+            </div>
+        </div>
+
+        <div id="game" class="panel hidden">
+            <div class="game-header">
+                <div class="player-info">
+                    <div id="playerWhite" class="player">
+                        <span class="player-label">White:</span>
+                        <span id="whiteName" class="player-name">-</span>
+                    </div>
+                    <div id="playerBlack" class="player">
+                        <span class="player-label">Black:</span>
+                        <span id="blackName" class="player-name">-</span>
+                    </div>
+                </div>
+                <div id="gameStatus" class="status-text">Waiting for opponent...</div>
+                <button id="leaveBtn" class="btn btn-secondary">Leave Game</button>
+            </div>
+
+            <div class="chess-container">
+                <div id="chessboard"></div>
+                <div class="game-info">
+                    <div class="info-section">
+                        <h3>Game Info</h3>
+                        <div id="turnIndicator" class="turn-indicator">
+                            <span id="currentTurn">White to move</span>
+                        </div>
+                        <div id="moveHistory" class="move-history">
+                            <h4>Move History</h4>
+                            <div id="movesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" class="error hidden"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.6/chess.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
