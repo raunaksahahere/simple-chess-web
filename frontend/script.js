@@ -4,7 +4,11 @@
  */
 
 // Initialize Socket.IO connection
-const socket = io('http://localhost:8000');
+const socket = io("https://simple-chess.onrender.com", {
+  transports: ["websocket"],
+  reconnection: true
+});
+
 
 // Game state
 let game = null;
@@ -75,22 +79,12 @@ function renderBoard() {
 function handleSquareClick(square) {
     if (!game || currentUsername === '') return;
     
-    // Disable manual input for "Raunak" - AI handles all moves automatically
-    if (currentUsername.toLowerCase() === 'raunak') {
-        showError('AI is playing automatically. Please wait for your move.');
-        return;
-    }
     
     // Check if it's the player's turn
     const isWhiteTurn = game.turn() === 'w';
     const players = [whiteName.textContent, blackName.textContent].filter(p => p !== '-');
     const playerIndex = players.indexOf(currentUsername);
     const isPlayerWhite = (playerIndex === 0);
-    
-    if (isPlayerWhite !== isWhiteTurn) {
-        showError('Not your turn!');
-        return;
-    }
     
     // If a square is already selected, try to make a move
     if (selectedSquare) {
@@ -231,7 +225,7 @@ function hideLoading() {
 // Get random room
 async function getRandomRoom() {
     try {
-        const response = await fetch('http://localhost:8000/api/rooms');
+        const response = await fetch('https://simple-chess.onrender.com/api/rooms');
         const data = await response.json();
         
         if (data.rooms && data.rooms.length > 0) {
@@ -437,3 +431,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
