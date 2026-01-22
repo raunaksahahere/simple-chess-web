@@ -63,20 +63,33 @@ const socket = io("https://simple-chess.onrender.com", {
       const boardState = game.board();
       const isBlack = isPlayerBlack();
       
-      // Determine rank order based on player color
-      const rankOrder = isBlack ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+      // Determine rank and file order based on player color
+      // boardState[0] is Rank 8, boardState[7] is Rank 1
+      const rankIndices = isBlack ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+      const fileIndices = isBlack ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
       
-      for (let i = 0; i < 8; i++) {
-          const rank = rankOrder[i];
-          for (let file = 0; file < 8; file++) {
+      for (let r = 0; r < 8; r++) {
+          const rankIdx = rankIndices[r];
+          for (let f = 0; f < 8; f++) {
+              const fileIdx = fileIndices[f];
+              
               const square = document.createElement('div');
               square.className = 'square';
-              // Flip square colors for black player
-              const squareIndex = isBlack ? (7 - rank + file) : (rank + file);
-              square.classList.add(squareIndex % 2 === 0 ? 'light-square' : 'dark-square');
-              square.dataset.square = String.fromCharCode(97 + file) + (rank + 1);
               
-              const piece = boardState[rank][file];
+              // Determine square color
+              // In 0-indexed board from top-left (a8):
+              // (0,0) is Light. (0,1) is Dark.
+              // So (rankIdx + fileIdx) is even -> Light.
+              const isLight = (rankIdx + fileIdx) % 2 === 0;
+              square.classList.add(isLight ? 'light-square' : 'dark-square');
+              
+              // Set data attribute (algebraic notation)
+              // rankIdx 0 -> Rank 8. rankIdx 7 -> Rank 1.
+              const rankLabel = 8 - rankIdx;
+              const fileLabel = String.fromCharCode(97 + fileIdx);
+              square.dataset.square = fileLabel + rankLabel;
+              
+              const piece = boardState[rankIdx][fileIdx];
               if (piece) {
                   const pieceSymbol = pieces[piece.color + piece.type.toUpperCase()];
                   square.textContent = pieceSymbol;
@@ -122,7 +135,8 @@ const socket = io("https://simple-chess.onrender.com", {
       // Check if clicking on own piece when selecting
       const boardState = game.board();
       const squareFile = square.charCodeAt(0) - 97;
-      const squareRank = parseInt(square[1]) - 1;
+      // Convert algebraic rank (1-8) to board index (7-0)
+      const squareRank = 8 - parseInt(square[1]);
       const piece = boardState[squareRank][squareFile];
       
       // If a square is already selected, try to make a move
@@ -133,15 +147,11 @@ const socket = io("https://simple-chess.onrender.com", {
               return;
           }
           
-          // Try to make move locally first to validate
-          const tempGame = new Chess(game.fen());
-          const move = tempGame.move({
-              from: selectedSquare,
-              to: square,
-              promotion: 'q' // Auto-promote to queen
-          });
+          // Check for valid move without mutating state
+          const possibleMoves = game.moves({ square: selectedSquare, verbose: true });
+          const isMove = possibleMoves.find(m => m.to === square);
           
-          if (move) {
+          if (isMove) {
               // Valid move - send to server (don't update local game yet)
               sendMoveToServer(selectedSquare, square);
               clearSelection();
@@ -204,7 +214,8 @@ const socket = io("https://simple-chess.onrender.com", {
       // Check if promotion is needed (pawn reaching last rank)
       const boardState = game.board();
       const fromFile = from.charCodeAt(0) - 97;
-      const fromRank = parseInt(from[1]) - 1;
+      // Convert algebraic rank (1-8) to board index (7-0)
+      const fromRank = 8 - parseInt(from[1]);
       const piece = boardState[fromRank][fromFile];
       
       if (piece && piece.type === 'p') {
